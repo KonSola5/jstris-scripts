@@ -205,63 +205,140 @@
     }
   }
 
-  Game.prototype.redrawMatrix = function () {
-    let redrawLine = true;
-    this.v.redrawMatrix();
+  ///////////////////////////////////
+  //             Game              //
+  ///////////////////////////////////
 
-    let center_ctx = document.getElementById("rotCenter").getContext("2d");
-    if (center_ctx != null) {
-      center_ctx.clearRect(0, 0, rotCenterCanvas.width, rotCenterCanvas.height);
-      let center = getRotationCenter(this.activeBlock.set ?? 0, this.activeBlock.id);
+  try {
+    Game.prototype.redrawMatrix = function () {
+      let redrawLine = true;
+      this.v.redrawMatrix();
 
-      if (center) {
-        center_ctx.fillStyle = "white";
-        center_ctx.strokeStyle = "white";
+      let center_ctx = document.getElementById("rotCenter").getContext("2d");
+      if (center_ctx != null) {
+        center_ctx.clearRect(0, 0, rotCenterCanvas.width, rotCenterCanvas.height);
+        let center = getRotationCenter(this.activeBlock.set ?? 0, this.activeBlock.id);
 
-        // Active piece
-        {
-          center_ctx.globalAlpha = 1
-          center_ctx.beginPath();
-          let x = this.block_size * (this.activeBlock.pos.x + center[0]);
-          let y = this.block_size * (this.activeBlock.pos.y + center[1]);
+        if (center) {
+          center_ctx.fillStyle = "white";
+          center_ctx.strokeStyle = "white";
 
-          drawRotationCenter(center_ctx, x, y, this.block_size, 3, this.activeBlock.set ?? 0);
-        }
-        {
-          // Ghost piece
-          center_ctx.globalAlpha = 0.5
-          center_ctx.beginPath();
-          let x = this.block_size * (this.ghostPiece.pos.x + center[0]);
-          let y = this.block_size * (this.ghostPiece.pos.y + center[1]);
+          // Active piece
+          {
+            center_ctx.globalAlpha = 1;
+            center_ctx.beginPath();
+            let x = this.block_size * (this.activeBlock.pos.x + center[0]);
+            let y = this.block_size * (this.activeBlock.pos.y + center[1]);
 
-          drawRotationCenter(center_ctx, x, y, this.block_size, 3, this.activeBlock.set ?? 0);
-        }
-      }
-    }
+            drawRotationCenter(center_ctx, x, y, this.block_size, 3, this.activeBlock.set ?? 0);
+          }
+          {
+            // Ghost piece
+            center_ctx.globalAlpha = 0.5;
+            center_ctx.beginPath();
+            let x = this.block_size * (this.ghostPiece.pos.x + center[0]);
+            let y = this.block_size * (this.ghostPiece.pos.y + center[1]);
 
-    if (this.pmode != 1) {
-      let ctx = document.getElementById("finishLine").getContext("2d");
-      if (ctx != null && redrawLine) {
-        ctx.clearRect(0, 0, lineCanvas.width, lineCanvas.height);
-      }
-      redrawLine = false;
-      return;
-    } else {
-      redrawLine = true;
-      let ctx = document.getElementById("finishLine").getContext("2d");
-      if (ctx != null) {
-        ctx.clearRect(0, 0, lineCanvas.width, lineCanvas.height);
-        if (this.linesRemaining > 0) {
-          var line_x = (20 - this.linesRemaining) * this.block_size;
-          ctx.beginPath();
-          ctx.moveTo(0, line_x);
-          ctx.lineTo(10 * this.block_size, line_x);
-          // set the color to whatever you want by changing this
-          ctx.strokeStyle = "#fc0377";
-          ctx.stroke();
+            drawRotationCenter(center_ctx, x, y, this.block_size, 3, this.activeBlock.set ?? 0);
+          }
         }
       }
-    }
-  };
+
+      if (this.pmode != 1) {
+        let ctx = document.getElementById("finishLine").getContext("2d");
+        if (ctx != null && redrawLine) {
+          ctx.clearRect(0, 0, lineCanvas.width, lineCanvas.height);
+        }
+        redrawLine = false;
+        return;
+      } else {
+        redrawLine = true;
+        let ctx = document.getElementById("finishLine").getContext("2d");
+        if (ctx != null) {
+          ctx.clearRect(0, 0, lineCanvas.width, lineCanvas.height);
+          if (this.linesRemaining > 0) {
+            var line_x = (20 - this.linesRemaining) * this.block_size;
+            ctx.beginPath();
+            ctx.moveTo(0, line_x);
+            ctx.lineTo(10 * this.block_size, line_x);
+            // set the color to whatever you want by changing this
+            ctx.strokeStyle = "#fc0377";
+            ctx.stroke();
+          }
+        }
+      }
+    };
+  } catch (error) {
+    console.warn("Failed to inject into the Game prototype! This should only appear if not in the game.");
+  }
+
+  ///////////////////////////////////
+  //           Replay              //
+  ///////////////////////////////////
+
+  try {
+    let replayRedrawOriginal = View.prototype.redraw;
+
+    View.prototype.redraw = function () {
+      let redrawLine = true;
+      replayRedrawOriginal.apply(this)
+
+      let center_ctx = document.getElementById("rotCenter").getContext("2d");
+      if (center_ctx != null) {
+        center_ctx.clearRect(0, 0, rotCenterCanvas.width, rotCenterCanvas.height);
+        let center = getRotationCenter(this.g.activeBlock.set ?? 0, this.g.activeBlock.id);
+
+        if (center) {
+          center_ctx.fillStyle = "white";
+          center_ctx.strokeStyle = "white";
+
+          // Active piece
+          {
+            center_ctx.globalAlpha = 1;
+            center_ctx.beginPath();
+            let x = this.block_size * (this.g.activeBlock.pos.x + center[0]);
+            let y = this.block_size * (this.g.activeBlock.pos.y + center[1]);
+
+            drawRotationCenter(center_ctx, x, y, this.block_size, 3, this.g.activeBlock.set ?? 0);
+          }
+          {
+            // Ghost piece
+            center_ctx.globalAlpha = 0.5;
+            center_ctx.beginPath();
+            let x = this.block_size * (this.g.ghostPiece.pos.x + center[0]);
+            let y = this.block_size * (this.g.ghostPiece.pos.y + center[1]);
+
+            drawRotationCenter(center_ctx, x, y, this.block_size, 3, this.g.activeBlock.set ?? 0);
+          }
+        }
+      }
+
+      if (this.g.pmode != 1) {
+        let ctx = document.getElementById("finishLine").getContext("2d");
+        if (ctx != null && redrawLine) {
+          ctx.clearRect(0, 0, lineCanvas.width, lineCanvas.height);
+        }
+        redrawLine = false;
+        return;
+      } else {
+        redrawLine = true;
+        let ctx = document.getElementById("finishLine").getContext("2d");
+        if (ctx != null) {
+          ctx.clearRect(0, 0, lineCanvas.width, lineCanvas.height);
+          if (this.g.linesRemaining > 0) {
+            var line_x = (20 - this.g.linesRemaining) * this.block_size;
+            ctx.beginPath();
+            ctx.moveTo(0, line_x);
+            ctx.lineTo(10 * this.block_size, line_x);
+            // set the color to whatever you want by changing this
+            ctx.strokeStyle = "#fc0377";
+            ctx.stroke();
+          }
+        }
+      }
+    };
+    
+  } catch (error) {
+    console.warn("Failed to inject into the View prototype! This should only appear if not in the replay.");
+  }
 })();
-
